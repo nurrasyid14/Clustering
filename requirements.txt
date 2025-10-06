@@ -1,0 +1,10 @@
+pandas
+plotly
+numpy
+scikit-learn
+scikit-fuzzy
+scipy
+kmodes
+streamlit
+openpyxl
+joblib
