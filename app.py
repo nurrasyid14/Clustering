@@ -14,10 +14,8 @@ from openai import OpenAI
 
 
 # Initialize client with OpenRouter credentials
-client = OpenAI(
-    base_url="https://openrouter.ai/api/v1",
-    api_key="'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'"
-)
+key = st.secrets["OPENROUTER_API_KEY"]
+client = OpenAI(base_url="https://openrouter.ai/api/v1", api_key=key)
 
 st.set_page_config(page_title="Clustering Specialist", layout="wide")
 
