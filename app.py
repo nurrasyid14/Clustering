@@ -187,48 +187,74 @@ with tab3:
     else:
         st.warning("⚠️ Silakan upload dan pra-proses dataset di tab Data Dashboard.")
 
-# --- Tab 4: Perbandingan Metode ---
+# --- Tab 4: Perbandingan Metode dan Dataset ---
 with tab4: 
-    st.subheader("📈 Perbandingan Antar Dataset") 
-    st.caption("Bandingkan performa clustering antar dataset menggunakan metrik evaluasi yang sama.") 
-    if "datasets" in st.session_state: 
-        dataset_names = list(st.session_state["datasets"].keys()) 
-        selected_datasets = st.multiselect("Pilih dataset untuk dibandingkan", dataset_names, default=dataset_names) 
-        if st.button("Bandingkan Dataset"): 
-            results = [] 
-            for name in selected_datasets: 
-                clean_df = st.session_state["datasets"][name] 
-                X = clean_df.select_dtypes(include="number").values 
-                from methods.centroids import KMeansClustering 
-                model = KMeansClustering(n_clusters=3) 
-                model.fit(X) 
-                labels = model.predict(X) 
-                try: 
-                    silhouette = silhouette_score(X, labels) 
-                    davies = davies_bouldin_score(X, labels) 
-                    calinski = calinski_harabasz_score(X, labels) 
-                except Exception: 
-                    silhouette = davies = calinski = np.nan 
-                results.append({
-                        "Dataset": name, "Silhouette": silhouette,
-                        "Davies-Bouldin": davies, "Calinski-Harabasz": calinski 
-                        }) 
-            df_results = pd.DataFrame(results).set_index("Dataset") 
-            st.write("### 📊 Hasil Perbandingan Metrik Antar Dataset") 
-            st.dataframe(df_results.style.format("{:.4f}")) 
-            best_sil = df_results["Silhouette"].idxmax() 
-            best_dav = df_results["Davies-Bouldin"].idxmin() 
-            best_cal = df_results["Calinski-Harabasz"].idxmax() 
-            st.markdown("### Ringkasan:") 
-            st.write(f"• Silhouette terbaik: **{best_sil}**") 
-            st.write(f"• Davies-Bouldin terbaik (terkecil): **{best_dav}**") 
-            st.write(f"• Calinski-Harabasz terbaik: **{best_cal}**") 
-            
-            with st.expander("📘 Catatan Metrik"): 
+    st.subheader("Perbandingan Dataset dan Metode Clustering") 
+    st.caption("Bandingkan performa clustering antar dataset dan antar metode.")
+    
+    if "datasets" in st.session_state and st.session_state["datasets"]:
+        dataset_names = list(st.session_state["datasets"].keys())
+        selected_datasets = st.multiselect(
+            "Pilih dataset untuk dibandingkan", dataset_names, default=dataset_names
+        )
+
+        if st.button("Bandingkan Dataset & Metode"): 
+            # Definisikan metode clustering
+            methods = [
+                ("KMeans", lambda X: KMeansClustering(n_clusters=3).fit(X).predict(X)),
+                ("Fuzzy C-Means", lambda X: FuzzyCMeansClustering(n_clusters=3, m=2).fit(X).predict(X)),
+                ("KModes", lambda X: KModesClustering(n_clusters=3).fit(X).predict(X)),
+                ("DBSCAN", lambda X: DBSCAN(eps=0.5, min_samples=5).fit(X).labels_),
+                ("GMM", lambda X: GMixtures(n_components=3).fit(X).labels_),
+                ("Agglomerative", lambda X: AgglomerativeClustering(n_clusters=3).fit_predict(X)),
+                ("Divisive", lambda X: DivisiveClustering(n_clusters=3).fit_predict(X))
+            ]
+
+            results = []
+
+            for dataset_name in selected_datasets:
+                clean_df = st.session_state["datasets"][dataset_name]
+                X = clean_df.select_dtypes(include="number").values
+
+                for method_name, clustering_func in methods:
+                    try:
+                        labels = clustering_func(X)
+                        silhouette = silhouette_score(X, labels)
+                        davies = davies_bouldin_score(X, labels)
+                        calinski = calinski_harabasz_score(X, labels)
+                    except Exception:
+                        silhouette = davies = calinski = np.nan
+
+                    results.append({
+                        "Dataset": dataset_name,
+                        "Method": method_name,
+                        "Silhouette": silhouette,
+                        "Davies-Bouldin": davies,
+                        "Calinski-Harabasz": calinski
+                    })
+
+            # Buat DataFrame hasil
+            df_results = pd.DataFrame(results)
+            st.write("### Hasil Perbandingan Metode Clustering per Dataset")
+            st.dataframe(df_results.style.format("{:.4f}"))
+
+            # Tampilkan metode terbaik per dataset
+            for dataset_name in selected_datasets:
+                subset = df_results[df_results["Dataset"] == dataset_name]
+                best_sil = subset.loc[subset["Silhouette"].idxmax(), "Method"]
+                best_dav = subset.loc[subset["Davies-Bouldin"].idxmin(), "Method"]
+                best_cal = subset.loc[subset["Calinski-Harabasz"].idxmax(), "Method"]
+
+                st.markdown(f"**Dataset {dataset_name} - Ringkasan Metode Terbaik:**")
+                st.write(f"• Silhouette terbaik: **{best_sil}**")
+                st.write(f"• Davies-Bouldin terbaik (terkecil): **{best_dav}**")
+                st.write(f"• Calinski-Harabasz terbaik: **{best_cal}**")
+
+            with st.expander("Catatan Metrik"):
                 st.markdown(""" 
-                **Silhouette Score:** semakin tinggi semakin baik (maksimum = 1). 
-                **Davies-Bouldin Index:** semakin rendah semakin baik (minimum = 0). 
-                **Calinski-Harabasz Index:** semakin tinggi semakin baik. 
-                """) 
+                **Silhouette Score:** semakin tinggi semakin baik (maksimum = 1).  
+                **Davies-Bouldin Index:** semakin rendah semakin baik (minimum = 0).  
+                **Calinski-Harabasz Index:** semakin tinggi semakin baik.  
+                """)
     else:
         st.warning("⚠️ Silakan unggah dan pra-proses dataset terlebih dahulu di tab Data Dashboard.")
