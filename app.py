@@ -55,7 +55,7 @@ with tab1:
             st.write("**Correlation Matrix:**") 
             viz = Visualizer() 
             corr_fig = viz.heatmap(eda.correlations()) 
-            _plotly_show(corr_fig) st.info("Semua dataset telah diproses dan disimpan di session_state.") 
+            _plotly_show(corr_fig) 
 
         st.info("Semua dataset telah diproses dan disimpan di session_state.")
 
