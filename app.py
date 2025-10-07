@@ -18,7 +18,10 @@ st.title("🤖 Clustering Specialist")
 st.write("Upload your dataset, preprocess it, explore clustering methods, and evaluate performance.")
 
 # --- Tabs ---
-tab1, tab2, tab3 = st.tabs(["Data Dashboard", "Clustering", "Evaluation"])
+import openai
+
+# Add this new tab:
+tab1, tab2, tab3, tab4 = st.tabs(["Data Dashboard", "Clustering", "Evaluation" "Perbandingan Metode"])
 
 # --- Tab 1: Data Dashboard ---
 with tab1:
@@ -187,11 +190,6 @@ with tab3:
                 st.plotly_chart(fig, use_container_width=True)
     else:
         st.warning("⚠️ Please complete clustering before evaluation.")
-
-import openai
-
-# Add this new tab:
-tab4 = st.tabs(["Perbandingan Metode"])[0]
 
 with tab4:
     st.subheader("Perbandingan Metode Klastering")
