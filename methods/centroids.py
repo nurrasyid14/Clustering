@@ -99,7 +99,7 @@ class FuzzyCMeansClustering:
         if X.ndim == 1:
             X = X.reshape(-1, 1)
 
-        # Handle variable-length returns (older vs newer scikit-fuzzy)
+        # scikit-fuzzy returns between 5 and 7 values depending on version
         result = cmeans(
             X.T,
             c=self.n_clusters,
@@ -109,18 +109,14 @@ class FuzzyCMeansClustering:
             seed=self.seed,
         )
 
-        # Unpack safely
-        if len(result) == 6:
-            cntr, u, _, _, _, _ = result
-        elif len(result) == 5:
-            cntr, u, _, _, _ = result
-        else:
-            raise ValueError(f"Unexpected cmeans() return length: {len(result)}")
+        # Unpack flexibly
+        cntr, u = result[0], result[1]
 
         self.centroids = np.asarray(cntr)
         self.u = np.asarray(u)
         self._is_fitted = True
         return self
+
 
     def predict(self, X: np.ndarray) -> np.ndarray:
         """Predict cluster memberships for new data."""
@@ -139,21 +135,12 @@ class FuzzyCMeansClustering:
             maxiter=self.maxiter,
         )
 
-        # Unpack safely again
-        if len(result) == 6:
-            u_pred, _, _, _, _, _ = result
-        elif len(result) == 5:
-            u_pred, _, _, _, _ = result
-        else:
-            raise ValueError(f"Unexpected cmeans_predict() return length: {len(result)}")
+        # Handle variable length again
+        u_pred = result[0]
 
         labels = np.argmax(u_pred, axis=0)
         return labels
 
-    def get_centroids(self) -> np.ndarray:
-        if not self._is_fitted:
-            raise ValueError("FuzzyCMeansClustering: not fitted")
-        return self.centroids
 
 
 
