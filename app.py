@@ -16,7 +16,7 @@ from methods.hierarchical import AgglomerativeClustering, DivisiveClustering
 st.set_page_config(page_title="Clustering Specialist", layout="wide")
 
 st.title("Clustering Specialist")
-st.write("Upload dataset, lakukan preprocessing, eksplor berbagai metode clustering, dan evaluasi performanya.")
+st.write("Muhamad Nur Rasyid // 3324600018 // 2 D4 SDT-A")
 
 # Helper to safely show a plotly figure or a list of figures
 def _plotly_show(fig_or_list):
