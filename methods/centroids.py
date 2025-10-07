@@ -67,10 +67,7 @@ class KMeansClustering:
 
 
 class FuzzyCMeansClustering:
-    """Wrapper around skfuzzy c-means. Optional dependency.
-
-    If skfuzzy is not installed, attempting to use this class will raise ImportError.
-    """
+    """Wrapper around skfuzzy c-means. Optional dependency."""
 
     def __init__(
         self,
@@ -92,7 +89,6 @@ class FuzzyCMeansClustering:
         self.maxiter = int(maxiter)
         self.seed = seed
 
-        # Attributes
         self.centroids: Optional[np.ndarray] = None
         self.u: Optional[np.ndarray] = None
         self._is_fitted = False
@@ -103,8 +99,8 @@ class FuzzyCMeansClustering:
         if X.ndim == 1:
             X = X.reshape(-1, 1)
 
-        # Transpose because skfuzzy expects features as rows, samples as columns
-        cntr, u, _, _, _, _, _ = cmeans(
+        # Handle variable-length returns (older vs newer scikit-fuzzy)
+        result = cmeans(
             X.T,
             c=self.n_clusters,
             m=self.m,
@@ -112,6 +108,14 @@ class FuzzyCMeansClustering:
             maxiter=self.maxiter,
             seed=self.seed,
         )
+
+        # Unpack safely
+        if len(result) == 6:
+            cntr, u, _, _, _, _ = result
+        elif len(result) == 5:
+            cntr, u, _, _, _ = result
+        else:
+            raise ValueError(f"Unexpected cmeans() return length: {len(result)}")
 
         self.centroids = np.asarray(cntr)
         self.u = np.asarray(u)
@@ -127,7 +131,6 @@ class FuzzyCMeansClustering:
         if X.ndim == 1:
             X = X.reshape(-1, 1)
 
-        # Handle both older and newer scikit-fuzzy versions
         result = cmeans_predict(
             X.T,
             self.centroids,
@@ -136,20 +139,22 @@ class FuzzyCMeansClustering:
             maxiter=self.maxiter,
         )
 
-        # Unpack flexibly to avoid version-specific crashes
+        # Unpack safely again
         if len(result) == 6:
             u_pred, _, _, _, _, _ = result
-        else:
+        elif len(result) == 5:
             u_pred, _, _, _, _ = result
+        else:
+            raise ValueError(f"Unexpected cmeans_predict() return length: {len(result)}")
 
         labels = np.argmax(u_pred, axis=0)
         return labels
-
 
     def get_centroids(self) -> np.ndarray:
         if not self._is_fitted:
             raise ValueError("FuzzyCMeansClustering: not fitted")
         return self.centroids
+
 
 
 class KModesClustering:
