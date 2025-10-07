@@ -203,8 +203,8 @@ with tab4:
         clean_df = st.session_state["clean_df"]
         X = clean_df.select_dtypes(include="number").values
 
-        if st.button("Analisis Otomatis dengan OpenAI"):
-            with st.spinner("Menganalisis dataset menggunakan OpenAI..."):
+        if st.button("Analisis"):
+            with st.spinner("Menganalisis dataset..."):
                 # Summarize dataset briefly for context
                 summary = (
                     f"Dataset dengan {X.shape[0]} baris dan {X.shape[1]} fitur. "
