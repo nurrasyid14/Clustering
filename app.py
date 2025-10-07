@@ -33,38 +33,31 @@ def _plotly_show(fig_or_list):
 tab1, tab2, tab3, tab4 = st.tabs(["Data Dashboard", "Clustering", "Evaluation", "Perbandingan Metode"])
 
 # --- Tab 1: Data Dashboard ---
-with tab1:
+with tab1: 
     st.subheader("Upload Dataset")
-    uploaded_file = st.file_uploader("Upload CSV atau Excel", type=["csv", "xlsx"])
+    uploaded_files = st.file_uploader("Upload satu atau lebih file CSV/XLSX", type=["csv", "xlsx"], accept_multiple_files=True)
+    if uploaded_files:
+        st.session_state["datasets"] = {}
+        for uploaded_file in uploaded_files:
+            df = pd.read_csv(uploaded_file) if uploaded_file.name.endswith(".csv") else pd.read_excel(uploaded_file) 
+            st.success(f"✅ Loaded {uploaded_file.name} ({df.shape[0]} baris, {df.shape[1]} kolom)")
+            # Preprocessing 
+            etl = ETL(scaling="standard") 
+            clean_df = etl.transform(df, missing="mean") 
+            st.session_state["datasets"][uploaded_file.name] = clean_df 
+            # EDA summary 
+            eda = EDA(df) 
+            summary = eda.summary() 
+            st.markdown(f"### Dataset: `{uploaded_file.name}`") 
+            st.write("**Shape:**", summary["shape"]) 
+            st.write("**Missing Values:**", summary["missing"]) 
+            st.dataframe(pd.DataFrame(summary["describe"])) 
+            st.write("**Correlation Matrix:**") 
+            viz = Visualizer() 
+            corr_fig = viz.heatmap(eda.correlations()) 
+            _plotly_show(corr_fig) st.info("Semua dataset telah diproses dan disimpan di session_state.") 
 
-    if uploaded_file:
-        df = pd.read_csv(uploaded_file) if uploaded_file.name.endswith(".csv") else pd.read_excel(uploaded_file)
-        st.success(f"✅ Loaded {uploaded_file.name} ({df.shape[0]} baris, {df.shape[1]} kolom)")
-
-        st.sidebar.subheader("Preprocessing Options")
-        missing_strategy = st.sidebar.selectbox("Missing Value Handling", ["drop", "mean", "median", "mode", "constant"])
-        scaling = st.sidebar.selectbox("Scaling", ["standard", "minmax", "none"])
-
-        etl = ETL(scaling=scaling)
-        clean_df = etl.transform(df, missing=missing_strategy)
-
-        st.session_state["df"] = df
-        st.session_state["clean_df"] = clean_df
-
-        eda = EDA(df)
-        summary = eda.summary()
-        st.write("**Dataset Shape:**", summary["shape"])
-        st.write("**Column Types:**", summary["dtypes"])
-        st.write("**Missing Values:**", summary["missing"])
-        st.write("**Statistics:**")
-        st.dataframe(pd.DataFrame(summary["describe"]))
-
-        st.write("**Correlation Matrix:**")
-        st.dataframe(eda.correlations())
-
-        viz = Visualizer()
-        corr_fig = viz.heatmap(eda.correlations())
-        _plotly_show(corr_fig)
+        st.info("Semua dataset telah diproses dan disimpan di session_state.")
 
     else:
         st.info("Upload dataset terlebih dahulu untuk melihat dashboard.")
@@ -192,111 +185,51 @@ with tab3:
 
 
 # --- Tab 4: Perbandingan Metode ---
-with tab4:
-    st.subheader("Perbandingan Metode Clustering")
-    st.caption("Perbandingan metrik antar metode.")
-
-    if "clean_df" in st.session_state:
-        clean_df = st.session_state["clean_df"]
-        X = clean_df.select_dtypes(include="number").values
-
-        # Let user choose n_clusters for comparators that need it
-        n_clusters = st.slider("Default jumlah klaster untuk perbandingan (dipakai oleh metode berbasis centroid/hierarki)", 2, 10, 3)
-
-        # Prepare methods
-        methods = {
-            "KMeans": lambda: KMeansClustering(n_clusters=n_clusters),
-            "Fuzzy C-Means": lambda: FuzzyCMeansClustering(n_clusters=n_clusters),
-            "KModes": lambda: KModesClustering(n_clusters=n_clusters),
-            "GaussianMixture": lambda: GMixtures(n_components=n_clusters),
-            "Agglomerative": lambda: AgglomerativeClustering(n_clusters=n_clusters),
-            "Divisive": lambda: DivisiveClustering(n_clusters=n_clusters),
-            "DBSCAN": lambda: DBSCAN(eps=0.5, min_samples=5)
-        }
-
-        if st.button("Jalankan Perbandingan Metode"):
-            results = []
-            for name, factory in methods.items():
-                model = None
-                labels = None
-                try:
-                    model = factory()
-                    # Fit depending on API
-                    fit_ret = model.fit(X)
-                    # Prefer standardized label extraction
-                    if hasattr(model, "predict"):
-                        labels = model.predict(X)
-                    elif hasattr(model, "labels_"):
-                        labels = getattr(model, "labels_")
-                    elif isinstance(fit_ret, (list, np.ndarray)):
-                        labels = np.asarray(fit_ret)
-                    else:
-                        # try fit_predict fallback
-                        if hasattr(model, "fit_predict"):
-                            labels = model.fit_predict(X)
-                        elif hasattr(model, "fit") and hasattr(model, "clusters"):
-                            labels = getattr(model, "clusters")
-                except Exception as e:
-                    st.warning(f"Gagal menjalankan {name}: {e}")
-                    labels = None
-
-                # Normalize labels to numpy or mark as invalid
-                if labels is None:
-                    silhouette = davies = calinski = np.nan
-                else:
-                    try:
-                        labels = np.asarray(labels)
-                        # Remove noise-only or single-cluster cases
-                        unique_labels = set(labels.flatten())
-                        if len(unique_labels) <= 1 or (len(unique_labels) == 1 and -1 in unique_labels):
-                            silhouette = davies = calinski = np.nan
-                        else:
-                            # For DBSCAN where noise label is -1, keep computation (silhouette ignores -1 automatically)
-                            silhouette = silhouette_score(X, labels)
-                            davies = davies_bouldin_score(X, labels)
-                            calinski = calinski_harabasz_score(X, labels)
-                    except Exception as e:
-                        st.warning(f"Gagal menghitung metrik untuk {name}: {e}")
-                        silhouette = davies = calinski = np.nan
-
+with tab4: 
+    st.subheader("📈 Perbandingan Antar Dataset") 
+    st.caption("Bandingkan performa clustering antar dataset menggunakan metrik evaluasi yang sama.") 
+    if "datasets" in st.session_state: 
+        dataset_names = list(st.session_state["datasets"].keys()) 
+        # Dataset selector 
+        selected_datasets = st.multiselect("Pilih dataset untuk dibandingkan", dataset_names, default=dataset_names) 
+        if st.button("Bandingkan Dataset"): 
+            results = [] 
+            for name in selected_datasets: 
+                clean_df = st.session_state["datasets"][name] 
+                X = clean_df.select_dtypes(include="number").values 
+                # Default clustering pakai KMeans 
+                from methods.centroids import KMeansClustering 
+                model = KMeansClustering(n_clusters=3) 
+                model.fit(X) 
+                labels = model.predict(X) 
+                try: 
+                    silhouette = silhouette_score(X, labels) 
+                    davies = davies_bouldin_score(X, labels) 
+                    calinski = calinski_harabasz_score(X, labels) 
+                except Exception: 
+                    silhouette = davies = calinski = np.nan 
                 results.append({
-                    "Metode": name,
-                    "Silhouette": silhouette,
-                    "Davies-Bouldin": davies,
-                    "Calinski-Harabasz": calinski
-                })
-
-            df_results = pd.DataFrame(results).set_index("Metode")
-            st.write("### Hasil Perbandingan (nilai NaN berarti metrik tidak dapat dihitung)")
-            st.dataframe(df_results.style.format("{:.4f}"))
-
-            # Highlight bests
-            best_silhouette = df_results["Silhouette"].idxmax() if df_results["Silhouette"].notna().any() else None
-            best_davies = df_results["Davies-Bouldin"].idxmin() if df_results["Davies-Bouldin"].notna().any() else None
-            best_calinski = df_results["Calinski-Harabasz"].idxmax() if df_results["Calinski-Harabasz"].notna().any() else None
-
-            st.markdown("### Rangkuman Otomatis")
-            if best_silhouette:
-                st.write(f"- Silhouette terbaik: **{best_silhouette}**")
-            if best_davies:
-                st.write(f"- Davies-Bouldin terbaik (terkecil): **{best_davies}**")
-            if best_calinski:
-                st.write(f"- Calinski-Harabasz terbaik: **{best_calinski}**")
-
-            # footnote
-            with st.expander("Catatan: Penjelasan metrik evaluasi"):
-                st.markdown("""
-                **Silhouette Score**  
-                Mengukur seberapa mirip titik dengan klasternya sendiri dibandingkan dengan klaster lain.
-                - Range: -1 sampai 1. Semakin tinggi semakin baik.
-
-                **Davies-Bouldin Index (DBI)**  
-                Mengukur kemiripan antar klaster; nilai lebih kecil lebih baik.
-
-                **Calinski-Harabasz Index (CHI)**  
-                Mengukur rasio variasi antar-klaster terhadap variasi intra-klaster; nilai lebih besar lebih baik.
-
-                Catatan: tidak semua metode menghasilkan label valid pada setiap pengaturan (mis. DBSCAN bisa memberi banyak noise).
-                """)
+                        "Dataset": name, "Silhouette": silhouette,
+                        "Davies-Bouldin": davies, "Calinski-Harabasz": calinski 
+                        }) 
+                df_results = pd.DataFrame(results).set_index("Dataset") 
+                st.write("### 📊 Hasil Perbandingan Metrik Antar Dataset") 
+                st.dataframe(df_results.style.format("{:.4f}")) 
+                # Best dataset summary 
+                best_sil = df_results["Silhouette"].idxmax() 
+                best_dav = df_results["Davies-Bouldin"].idxmin() 
+                best_cal = df_results["Calinski-Harabasz"].idxmax() 
+                st.markdown("### Ringkasan:") 
+                st.write(f"• Silhouette terbaik: **{best_sil}**") 
+                st.write(f"• Davies-Bouldin terbaik (terkecil): **{best_dav}**") 
+                st.write(f"• Calinski-Harabasz terbaik: **{best_cal}**") 
+                
+                with st.expander("📘 Catatan Metrik"): 
+                    st.markdown(""" 
+                **Silhouette Score:** semakin tinggi semakin baik (maksimum = 1). 
+                **Davies-Bouldin Index:** semakin rendah semakin baik (minimum = 0). 
+                **Calinski-Harabasz Index:** semakin tinggi semakin baik. 
+                                """) 
+                    
     else:
         st.warning("⚠️ Silakan unggah dan pra-proses dataset terlebih dahulu di tab Data Dashboard.")
