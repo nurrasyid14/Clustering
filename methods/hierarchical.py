@@ -33,11 +33,15 @@ class AgglomerativeClustering:
     def fit(self, X: np.ndarray) -> "AgglomerativeClustering":
         X = np.asarray(X)
         self._X_train = X
-        # linkage expects a condensed distance matrix when provided with a 1D array
         Z = linkage(X, method=self.method)
         self.clusters = fcluster(Z, t=self.n_clusters, criterion="maxclust")
         logger.info("Agglomerative produced %d clusters", len(np.unique(self.clusters)))
         return self
+
+    def fit_predict(self, X: np.ndarray) -> np.ndarray:
+        """Convenience wrapper to fit and return cluster labels."""
+        self.fit(X)
+        return self.clusters
 
     def predict(self, X_new: np.ndarray) -> np.ndarray:
         if self.clusters is None or self._X_train is None:
