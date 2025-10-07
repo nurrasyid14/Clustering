@@ -191,11 +191,15 @@ with tab3:
     else:
         st.warning("⚠️ Please complete clustering before evaluation.")
 
+# --- Tab 4: Perbandingan Metode ---
 with tab4:
     st.subheader("Perbandingan Metode Klastering")
     st.caption("Analisis otomatis untuk menentukan metode klastering terbaik berdasarkan karakteristik data.")
 
-    if X is not None:
+    if "clean_df" in st.session_state:
+        clean_df = st.session_state["clean_df"]
+        X = clean_df.select_dtypes(include="number").values
+
         if st.button("Analisis Otomatis dengan OpenAI"):
             with st.spinner("Menganalisis dataset menggunakan OpenAI..."):
                 # Summarize dataset briefly for context
@@ -203,7 +207,7 @@ with tab4:
                     f"Dataset dengan {X.shape[0]} baris dan {X.shape[1]} fitur. "
                     f"Rata-rata: {np.mean(X):.2f}, standar deviasi: {np.std(X):.2f}."
                 )
-                
+
                 # Compose a concise prompt
                 prompt = f"""
                 Berdasarkan deskripsi dataset berikut:
@@ -228,4 +232,8 @@ with tab4:
                     temperature=0.7,
                 )
                 explanation = response.choices[0].message.content
+                st.markdown("### 🔍 Hasil Analisis OpenAI")
                 st.markdown(explanation)
+    else:
+        st.warning("⚠️ Silakan unggah dan pra-proses dataset terlebih dahulu di tab Data Dashboard.")
+
