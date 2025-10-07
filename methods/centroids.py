@@ -72,52 +72,72 @@ class FuzzyCMeansClustering:
     If skfuzzy is not installed, attempting to use this class will raise ImportError.
     """
 
-    def __init__(self, n_clusters: int = 3, m: float = 2.0, error: float = 1e-5, maxiter: int = 1000, seed: Optional[int] = 42):
+    def __init__(
+        self,
+        n_clusters: int = 3,
+        m: float = 2.0,
+        error: float = 1e-5,
+        maxiter: int = 1000,
+        seed: Optional[int] = 42,
+    ):
         if not _HAS_SKFUZZY:
-            raise ImportError("skfuzzy is required for FuzzyCMeansClustering. Install with `pip install scikit-fuzzy`.")
+            raise ImportError(
+                "scikit-fuzzy is required for FuzzyCMeansClustering. "
+                "Install with `pip install scikit-fuzzy`."
+            )
+
         self.n_clusters = int(n_clusters)
         self.m = float(m)
         self.error = float(error)
         self.maxiter = int(maxiter)
         self.seed = seed
+
+        # Attributes
         self.centroids: Optional[np.ndarray] = None
         self.u: Optional[np.ndarray] = None
         self._is_fitted = False
 
     def fit(self, X: np.ndarray) -> "FuzzyCMeansClustering":
-        X = np.asarray(X)
+        """Fit fuzzy c-means on data."""
+        X = np.asarray(X, dtype=float)
         if X.ndim == 1:
             X = X.reshape(-1, 1)
-        cntr, u, _, _, _, _ = cmeans(
+
+        # Transpose because skfuzzy expects features as rows, samples as columns
+        cntr, u, _, _, _, _, _ = cmeans(
             X.T,
             c=self.n_clusters,
             m=self.m,
             error=self.error,
-            maxiter=self.maxiter
+            maxiter=self.maxiter,
+            seed=self.seed,
         )
+
         self.centroids = np.asarray(cntr)
         self.u = np.asarray(u)
         self._is_fitted = True
-
-
         return self
 
     def predict(self, X: np.ndarray) -> np.ndarray:
+        """Predict cluster memberships for new data."""
         if not self._is_fitted:
             raise ValueError("FuzzyCMeansClustering: call fit(...) before predict(...)")
-        X = np.asarray(X)
+
+        X = np.asarray(X, dtype=float)
         if X.ndim == 1:
             X = X.reshape(-1, 1)
+
         u_pred, _, _, _, _ = cmeans_predict(
             X.T,
             self.centroids,
             m=self.m,
             error=self.error,
-            maxiter=self.maxiter
+            maxiter=self.maxiter,
         )
 
-
-        return np.argmax(u_pred, axis=0)
+        # Membership matrix → hard cluster assignment
+        labels = np.argmax(u_pred, axis=0)
+        return labels
 
     def get_centroids(self) -> np.ndarray:
         if not self._is_fitted:
