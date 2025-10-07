@@ -1,7 +1,7 @@
 # app.py
 import streamlit as st
 import pandas as pd
-
+import numpy as np
 from preprocessor.etl import ETL
 from preprocessor.eda import EDA
 from methods.visualizer import Visualizer
@@ -10,6 +10,7 @@ from methods.centroids import KMeansClustering, FuzzyCMeansClustering, KModesClu
 from methods.densities import DBSCAN, KDE
 from methods.distributions_c import GMixtures
 from methods.hierarchical import AgglomerativeClustering, DivisiveClustering
+import openai
 
 st.set_page_config(page_title="Clustering Specialist", layout="wide")
 
@@ -18,9 +19,7 @@ st.title("🤖 Clustering Specialist")
 st.write("Upload your dataset, preprocess it, explore clustering methods, and evaluate performance.")
 
 # --- Tabs ---
-import openai
 
-# Add this new tab:
 tab1, tab2, tab3, tab4 = st.tabs(["Data Dashboard", "Clustering", "Evaluation", "Perbandingan Metode"])
 
 # --- Tab 1: Data Dashboard ---
