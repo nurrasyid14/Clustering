@@ -236,7 +236,13 @@ with tab4:
             # Buat DataFrame hasil
             df_results = pd.DataFrame(results)
             st.write("### Hasil Perbandingan Metode Clustering per Dataset")
-            st.dataframe(df_results.style.format("{:.4f}"))
+            st.dataframe(
+                df_results.style.format({
+                    "Silhouette": "{:.4f}",
+                    "Davies-Bouldin": "{:.4f}",
+                    "Calinski-Harabasz": "{:.4f}"
+                })
+            )
 
             # Tampilkan metode terbaik per dataset
             for dataset_name in selected_datasets:
@@ -250,7 +256,7 @@ with tab4:
                 st.write(f"• Davies-Bouldin terbaik (terkecil): **{best_dav}**")
                 st.write(f"• Calinski-Harabasz terbaik: **{best_cal}**")
 
-            with st.expander("Catatan Metrik"):
+            with st.expander("📘 Catatan Metrik"):
                 st.markdown(""" 
                 **Silhouette Score:** semakin tinggi semakin baik (maksimum = 1).  
                 **Davies-Bouldin Index:** semakin rendah semakin baik (minimum = 0).  
