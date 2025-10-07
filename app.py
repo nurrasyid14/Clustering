@@ -232,12 +232,11 @@ with tab4:
                 response = client.chat.completions.create(
                 model="gpt-4o-mini",
                 messages=[
-                    {"role": "system", "content": "Kau adalah asisten analisis data."},
-                    {"role": "user", "content": prompt}
+                    {"role": "system", "content": "Kau adalah asisten yang ahli dalam analisis Clustering dan data mining."},
+                    {"role": "user", "content": prompt},
                 ],
                 temperature=0.7,
             )
-
             explanation = response.choices[0].message.content
             st.markdown("### 🔍 Hasil Analisis OpenAI")
             st.markdown(explanation)
