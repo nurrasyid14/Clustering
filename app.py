@@ -21,7 +21,7 @@ st.write("Upload your dataset, preprocess it, explore clustering methods, and ev
 import openai
 
 # Add this new tab:
-tab1, tab2, tab3, tab4 = st.tabs(["Data Dashboard", "Clustering", "Evaluation" "Perbandingan Metode"])
+tab1, tab2, tab3, tab4 = st.tabs(["Data Dashboard", "Clustering", "Evaluation", "Perbandingan Metode"])
 
 # --- Tab 1: Data Dashboard ---
 with tab1:
