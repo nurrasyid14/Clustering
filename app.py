@@ -10,10 +10,14 @@ from methods.centroids import KMeansClustering, FuzzyCMeansClustering, KModesClu
 from methods.densities import DBSCAN, KDE
 from methods.distributions_c import GMixtures
 from methods.hierarchical import AgglomerativeClustering, DivisiveClustering
-import openai
+from openai import OpenAI
 
-openai.api_key = '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'
-openai.base_url = "https://openrouter.ai/api/v1"
+
+# Initialize client with OpenRouter credentials
+client = OpenAI(
+    base_url="https://openrouter.ai/api/v1",
+    api_key="'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'"
+)
 
 st.set_page_config(page_title="Clustering Specialist", layout="wide")
 
@@ -227,14 +231,19 @@ with tab4:
                 """
 
                 # OpenAI API call
-                response = openai.chat.completions.create(
-                    model="gpt-4o-mini",
-                    messages=[{"role": "user", "content": prompt}],
-                    temperature=0.7,
-                )
-                explanation = response.choices[0].message.content
-                st.markdown("### 🔍 Hasil Analisis OpenAI")
-                st.markdown(explanation)
+                response = client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[
+                    {"role": "system", "content": "Kau adalah asisten analisis data."},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.7,
+            )
+
+            explanation = response.choices[0].message.content
+            st.markdown("### 🔍 Hasil Analisis OpenAI")
+            st.markdown(explanation)
+
     else:
-        st.warning("⚠️ Silakan unggah dan pra-proses dataset terlebih dahulu di tab Data Dashboard.")
+        st.warning("⚠️ Silakan unggah dan lakukan preprocessing dataset terlebih dahulu di tab Data Dashboard.")
 
