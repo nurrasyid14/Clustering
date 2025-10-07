@@ -15,7 +15,7 @@ from methods.hierarchical import AgglomerativeClustering, DivisiveClustering
 
 st.set_page_config(page_title="Clustering Specialist", layout="wide")
 
-st.title("🤖 Clustering Specialist")
+st.title("Clustering Specialist")
 st.write("Upload dataset, lakukan preprocessing, eksplor berbagai metode clustering, dan evaluasi performanya.")
 
 # Helper to safely show a plotly figure or a list of figures
@@ -173,7 +173,7 @@ with tab3:
         _plotly_show(viz.metrics_radar(metrics))
 
         # Footnote / catatan (expander)
-        with st.expander("📘 Penjelasan Metrik Evaluasi"):
+        with st.expander("Penjelasan Metrik Evaluasi"):
             st.markdown("""
             **Silhouette Score**  
             Mengukur seberapa mirip suatu titik dengan klasternya sendiri dibandingkan dengan klaster lain.  
@@ -275,7 +275,7 @@ with tab4:
             best_davies = df_results["Davies-Bouldin"].idxmin() if df_results["Davies-Bouldin"].notna().any() else None
             best_calinski = df_results["Calinski-Harabasz"].idxmax() if df_results["Calinski-Harabasz"].notna().any() else None
 
-            st.markdown("### 🔍 Rangkuman Otomatis")
+            st.markdown("### Rangkuman Otomatis")
             if best_silhouette:
                 st.write(f"- Silhouette terbaik: **{best_silhouette}**")
             if best_davies:
@@ -284,7 +284,7 @@ with tab4:
                 st.write(f"- Calinski-Harabasz terbaik: **{best_calinski}**")
 
             # footnote
-            with st.expander("📘 Catatan: Penjelasan metrik evaluasi"):
+            with st.expander("Catatan: Penjelasan metrik evaluasi"):
                 st.markdown("""
                 **Silhouette Score**  
                 Mengukur seberapa mirip titik dengan klasternya sendiri dibandingkan dengan klaster lain.
