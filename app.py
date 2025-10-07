@@ -14,18 +14,18 @@ from openai import OpenAI
 
 
 # Initialize client with OpenRouter credentials
-key = st.secrets["OPENROUTER_API_KEY"]
-client = OpenAI(base_url="https://openrouter.ai/api/v1", api_key=key)
+# key = st.secrets["OPENROUTER_API_KEY"]
+# client = OpenAI(base_url="https://openrouter.ai/api/v1", api_key=key)
 
-st.set_page_config(page_title="Clustering Specialist", layout="wide")
+# st.set_page_config(page_title="Clustering Specialist", layout="wide")
 
 # --- App Header ---
-st.title("🤖 Clustering Specialist")
-st.write("Upload your dataset, preprocess it, explore clustering methods, and evaluate performance.")
+st.title("Clustering")
+st.write("Upload dataset, preprocess , eksplor, dan evaluasi peforma.")
 
 # --- Tabs ---
 
-tab1, tab2, tab3, tab4 = st.tabs(["Data Dashboard", "Clustering", "Evaluation", "Perbandingan Metode"])
+tab1, tab2, tab3 = st.tabs(["Data Dashboard", "Clustering", "Evaluation"])
 
 # --- Tab 1: Data Dashboard ---
 with tab1:
@@ -194,53 +194,53 @@ with tab3:
     else:
         st.warning("⚠️ Please complete clustering before evaluation.")
 
-# --- Tab 4: Perbandingan Metode ---
-with tab4:
-    st.subheader("Perbandingan Metode Clustering")
-    st.caption("Analisis metode klastering terbaik berdasarkan karakteristik data.")
+# # --- Tab 4: Perbandingan Metode ---
+# with tab4:
+#     st.subheader("Perbandingan Metode Clustering")
+#     st.caption("Analisis metode klastering terbaik berdasarkan karakteristik data.")
 
-    if "clean_df" in st.session_state:
-        clean_df = st.session_state["clean_df"]
-        X = clean_df.select_dtypes(include="number").values
+#     if "clean_df" in st.session_state:
+#         clean_df = st.session_state["clean_df"]
+#         X = clean_df.select_dtypes(include="number").values
 
-        if st.button("Analisis"):
-            with st.spinner("Menganalisis dataset..."):
-                # Summarize dataset briefly for context
-                summary = (
-                    f"Dataset dengan {X.shape[0]} baris dan {X.shape[1]} fitur. "
-                    f"Rata-rata: {np.mean(X):.2f}, standar deviasi: {np.std(X):.2f}."
-                )
+#         if st.button("Analisis"):
+#             with st.spinner("Menganalisis dataset..."):
+#                 # Summarize dataset briefly for context
+#                 summary = (
+#                     f"Dataset dengan {X.shape[0]} baris dan {X.shape[1]} fitur. "
+#                     f"Rata-rata: {np.mean(X):.2f}, standar deviasi: {np.std(X):.2f}."
+#                 )
 
-                # Compose a concise prompt
-                prompt = f"""
-                Berdasarkan deskripsi dataset berikut:
-                {summary}
+#                 # Compose a concise prompt
+#                 prompt = f"""
+#                 Berdasarkan deskripsi dataset berikut:
+#                 {summary}
 
-                Jelaskan secara singkat metode Clustering mana yang paling sesuai:
-                - KMeans
-                - Fuzzy C-Means
-                - KModes
-                - DBSCAN
-                - OPTICS
-                - Agglomerative
-                - Divisive
+#                 Jelaskan secara singkat metode Clustering mana yang paling sesuai:
+#                 - KMeans
+#                 - Fuzzy C-Means
+#                 - KModes
+#                 - DBSCAN
+#                 - OPTICS
+#                 - Agglomerative
+#                 - Divisive
 
-                Gunakan bahasa Indonesia yang sederhana.
-                """
+#                 Gunakan bahasa Indonesia yang sederhana.
+#                 """
 
-                # OpenAI API call
-                response = client.chat.completions.create(
-                model="gpt-4o-mini",
-                messages=[
-                    {"role": "system", "content": "Kau adalah asisten yang ahli dalam analisis Clustering dan data mining."},
-                    {"role": "user", "content": prompt},
-                ],
-                temperature=0.7,
-            )
-            explanation = response.choices[0].message.content
-            st.markdown("### 🔍 Hasil Analisis OpenAI")
-            st.markdown(explanation)
+#                 # OpenAI API call
+#                 response = client.chat.completions.create(
+#                 model="gpt-4o-mini",
+#                 messages=[
+#                     {"role": "system", "content": "Kau adalah asisten yang ahli dalam analisis Clustering dan data mining."},
+#                     {"role": "user", "content": prompt},
+#                 ],
+#                 temperature=0.7,
+#             )
+#             explanation = response.choices[0].message.content
+#             st.markdown("### 🔍 Hasil Analisis OpenAI")
+#             st.markdown(explanation)
 
-    else:
-        st.warning("⚠️ Silakan unggah dan lakukan preprocessing dataset terlebih dahulu di tab Data Dashboard.")
+#     else:
+#         st.warning("⚠️ Silakan unggah dan lakukan preprocessing dataset terlebih dahulu di tab Data Dashboard.")
 
