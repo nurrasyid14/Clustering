@@ -12,6 +12,9 @@ from methods.distributions_c import GMixtures
 from methods.hierarchical import AgglomerativeClustering, DivisiveClustering
 import openai
 
+openai.api_key = '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'
+openai.base_url = "https://openrouter.ai/api/v1"
+
 st.set_page_config(page_title="Clustering Specialist", layout="wide")
 
 # --- App Header ---
@@ -191,8 +194,8 @@ with tab3:
 
 # --- Tab 4: Perbandingan Metode ---
 with tab4:
-    st.subheader("Perbandingan Metode Klastering")
-    st.caption("Analisis otomatis untuk menentukan metode klastering terbaik berdasarkan karakteristik data.")
+    st.subheader("Perbandingan Metode Clustering")
+    st.caption("Analisis metode klastering terbaik berdasarkan karakteristik data.")
 
     if "clean_df" in st.session_state:
         clean_df = st.session_state["clean_df"]
@@ -211,7 +214,7 @@ with tab4:
                 Berdasarkan deskripsi dataset berikut:
                 {summary}
 
-                Jelaskan secara singkat metode klastering mana yang paling sesuai:
+                Jelaskan secara singkat metode Clustering mana yang paling sesuai:
                 - KMeans
                 - Fuzzy C-Means
                 - KModes
