@@ -127,7 +127,8 @@ class FuzzyCMeansClustering:
         if X.ndim == 1:
             X = X.reshape(-1, 1)
 
-        u_pred, _, _, _, _ = cmeans_predict(
+        # Handle both older and newer scikit-fuzzy versions
+        result = cmeans_predict(
             X.T,
             self.centroids,
             m=self.m,
@@ -135,9 +136,15 @@ class FuzzyCMeansClustering:
             maxiter=self.maxiter,
         )
 
-        # Membership matrix → hard cluster assignment
+        # Unpack flexibly to avoid version-specific crashes
+        if len(result) == 6:
+            u_pred, _, _, _, _, _ = result
+        else:
+            u_pred, _, _, _, _ = result
+
         labels = np.argmax(u_pred, axis=0)
         return labels
+
 
     def get_centroids(self) -> np.ndarray:
         if not self._is_fitted:
