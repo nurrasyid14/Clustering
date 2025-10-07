@@ -124,12 +124,11 @@ with tab2:
             n_clusters = st.slider("Number of clusters", 2, 10, 3)
             if method == "Agglomerative":
                 model = AgglomerativeClustering(n_clusters=n_clusters)
-                model.fit(X)
-                labels = model.labels_
+                labels = model.fit_predict(X)
             else:
                 model = DivisiveClustering(n_clusters=n_clusters)
-                model.fit(X)
-                labels = model.labels_
+                labels = model.fit_predict(X)
+
 
 
         # Results + Visualization
