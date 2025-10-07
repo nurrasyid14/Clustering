@@ -1,4 +1,3 @@
-```python
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -198,4 +197,4 @@ with tab4:
                 "Namun, kamu tetap bisa membandingkan hasil metrik dari tab *Evaluation*.")
     else:
         st.warning("⚠️ Silakan unggah dataset terlebih dahulu di tab Data Dashboard.")
-```
+
