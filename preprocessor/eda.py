@@ -16,7 +16,14 @@ class EDA:
         }
 
     def correlations(self, method="pearson"):
-        return self.df.corr(method=method)
+        # Select only numeric columns
+        numeric_df = self.df.select_dtypes(include=[np.number])
+        
+        if numeric_df.empty:
+            return {}  # No numeric data to correlate
+        
+        return numeric_df.corr(method=method)
+
 
     def value_counts(self, column: str, normalize=False):
         if column not in self.df.columns:
