@@ -8,3 +8,4 @@ kmodes
 streamlit
 openpyxl
 joblib
+openai

@@ -22,6 +22,10 @@ tab1, tab2, tab3 = st.tabs(["Data Dashboard", "Clustering", "Evaluation"])
 
 # --- Tab 1: Data Dashboard ---
 with tab1:
+    st.subheader("Metode Berbasis Centroid")
+    st.caption("Metode ini membagi data ke dalam beberapa kelompok dengan mencari pusat (centroid) "
+               "yang meminimalkan jarak total antara titik data dan centroid-nya.")
+
     st.subheader("Upload Dataset")
     uploaded_file = st.file_uploader("Upload your CSV or Excel file", type=["csv", "xlsx"])
 
@@ -67,6 +71,10 @@ with tab1:
 
 # --- Tab 2: Clustering ---
 with tab2:
+    st.subheader("Metode Berbasis Kepadatan")
+    st.caption("Metode pengelompokan titik-titik data yang berdekatan dalam area yang padat, "
+               "sementara titik yang jauh dianggap sebagai noise. Cocok untuk data dengan bentuk tidak beraturan.")
+    
     if "clean_df" in st.session_state:
         st.subheader("Clustering Pipeline")
         clean_df = st.session_state["clean_df"]
@@ -154,6 +162,10 @@ with tab2:
 
 # --- Tab 3: Evaluation ---
 with tab3:
+    st.subheader("Metode Hierarkis")
+    st.caption("Metode ini membentuk hierarki klaster secara bertahap: agglomerative (dari bawah ke atas) "
+               "atau divisive (dari atas ke bawah). Hasilnya dapat divisualisasikan dengan dendrogram.")
+    
     if "clean_df" in st.session_state and "labels" in st.session_state and st.session_state["labels"] is not None:
         st.subheader("Evaluation Metrics")
         clean_df = st.session_state["clean_df"]
@@ -175,3 +187,47 @@ with tab3:
                 st.plotly_chart(fig, use_container_width=True)
     else:
         st.warning("⚠️ Please complete clustering before evaluation.")
+
+import openai
+
+# Add this new tab:
+tab4 = st.tabs(["Perbandingan Metode"])[0]
+
+with tab4:
+    st.subheader("Perbandingan Metode Klastering")
+    st.caption("Analisis otomatis untuk menentukan metode klastering terbaik berdasarkan karakteristik data.")
+
+    if X is not None:
+        if st.button("Analisis Otomatis dengan OpenAI"):
+            with st.spinner("Menganalisis dataset menggunakan OpenAI..."):
+                # Summarize dataset briefly for context
+                summary = (
+                    f"Dataset dengan {X.shape[0]} baris dan {X.shape[1]} fitur. "
+                    f"Rata-rata: {np.mean(X):.2f}, standar deviasi: {np.std(X):.2f}."
+                )
+                
+                # Compose a concise prompt
+                prompt = f"""
+                Berdasarkan deskripsi dataset berikut:
+                {summary}
+
+                Jelaskan secara singkat metode klastering mana yang paling sesuai:
+                - KMeans
+                - Fuzzy C-Means
+                - KModes
+                - DBSCAN
+                - OPTICS
+                - Agglomerative
+                - Divisive
+
+                Gunakan bahasa Indonesia yang sederhana.
+                """
+
+                # OpenAI API call
+                response = openai.chat.completions.create(
+                    model="gpt-4o-mini",
+                    messages=[{"role": "user", "content": prompt}],
+                    temperature=0.7,
+                )
+                explanation = response.choices[0].message.content
+                st.markdown(explanation)
