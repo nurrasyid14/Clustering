@@ -14,7 +14,6 @@ from methods.distributions_c import GMixtures
 from methods.hierarchical import AgglomerativeClustering, DivisiveClustering
 
 st.set_page_config(page_title="Clustering Specialist", layout="wide")
-
 st.title("Clustering Specialist")
 st.write("Muhamad Nur Rasyid // 3324600018 // 2 D4 SDT-A")
 
@@ -28,7 +27,6 @@ def _plotly_show(fig_or_list):
     else:
         st.plotly_chart(fig_or_list, use_container_width=True)
 
-
 # --- Tabs ---
 tab1, tab2, tab3, tab4 = st.tabs(["Data Dashboard", "Clustering", "Evaluation", "Perbandingan Metode"])
 
@@ -37,7 +35,8 @@ with tab1:
     st.subheader("Upload Dataset")
     uploaded_files = st.file_uploader("Upload satu atau lebih file CSV/XLSX", type=["csv", "xlsx"], accept_multiple_files=True)
     if uploaded_files:
-        st.session_state["datasets"] = {}
+        if "datasets" not in st.session_state:
+            st.session_state["datasets"] = {}
         for uploaded_file in uploaded_files:
             df = pd.read_csv(uploaded_file) if uploaded_file.name.endswith(".csv") else pd.read_excel(uploaded_file) 
             st.success(f"✅ Loaded {uploaded_file.name} ({df.shape[0]} baris, {df.shape[1]} kolom)")
@@ -58,17 +57,18 @@ with tab1:
             _plotly_show(corr_fig) 
 
         st.info("Semua dataset telah diproses dan disimpan di session_state.")
-
     else:
         st.info("Upload dataset terlebih dahulu untuk melihat dashboard.")
 
-
 # --- Tab 2: Clustering ---
 with tab2:
-    if "clean_df" in st.session_state:
-        st.subheader("Clustering Pipeline")
-        clean_df = st.session_state["clean_df"]
+    if "datasets" in st.session_state and st.session_state["datasets"]:
+        dataset_names = list(st.session_state["datasets"].keys())
+        selected_dataset_name = st.selectbox("Pilih dataset untuk clustering", dataset_names)
+        clean_df = st.session_state["datasets"][selected_dataset_name]
         X = clean_df.select_dtypes(include="number").values
+
+        st.subheader("Clustering Pipeline")
         labels, method = None, None
 
         basis = st.radio("Pilih jenis metode clustering:", ["Centroid-based", "Density-based", "Distribution-based", "Hierarchical"])
@@ -130,59 +130,62 @@ with tab2:
                 model = DivisiveClustering(n_clusters=n_clusters)
                 labels = model.fit_predict(X)
 
-        # Results + Visualization (safe plotting)
+        # Results + Visualization
         if labels is not None:
             st.write(f"**Algoritma yang Dipilih:** {method}")
             st.write("Cluster Labels:", labels)
 
             viz = Visualizer()
             _plotly_show(viz.scatter(X, labels))
-
-            # violin returns either list of fig or a single fig; use safe helper
             violin_figs = viz.violin(X, labels)
             _plotly_show(violin_figs)
 
-        st.session_state["labels"] = labels if labels is not None else None
+            # Save labels per dataset
+            if "cluster_labels" not in st.session_state:
+                st.session_state["cluster_labels"] = {}
+            st.session_state["cluster_labels"][selected_dataset_name] = labels
     else:
         st.warning("⚠️ Silakan upload dan pra-proses dataset di tab Data Dashboard.")
 
-
 # --- Tab 3: Evaluation ---
 with tab3:
-    if "clean_df" in st.session_state and "labels" in st.session_state and st.session_state["labels"] is not None:
-        st.subheader("Evaluasi Kualitas Klastering")
-        clean_df = st.session_state["clean_df"]
+    if "datasets" in st.session_state and st.session_state["datasets"]:
+        dataset_names = list(st.session_state["datasets"].keys())
+        selected_dataset_name = st.selectbox("Pilih dataset untuk evaluasi", dataset_names)
+        clean_df = st.session_state["datasets"][selected_dataset_name]
         X = clean_df.select_dtypes(include="number").values
-        labels = st.session_state["labels"]
+        labels = st.session_state.get("cluster_labels", {}).get(selected_dataset_name)
 
-        eval_model = Evaluator(X, labels)
-        metrics = eval_model.evaluate_all()
+        if labels is not None:
+            st.subheader("Evaluasi Kualitas Klastering")
+            eval_model = Evaluator(X, labels)
+            metrics = eval_model.evaluate_all()
 
-        st.write("### Tabel Metrik Evaluasi")
-        st.dataframe(pd.DataFrame(metrics, index=[0]).T)
+            st.write("### Tabel Metrik Evaluasi")
+            st.dataframe(pd.DataFrame(metrics, index=[0]).T)
 
-        viz = Visualizer()
-        _plotly_show(viz.metrics_bar(metrics))
-        _plotly_show(viz.metrics_radar(metrics))
+            viz = Visualizer()
+            _plotly_show(viz.metrics_bar(metrics))
+            _plotly_show(viz.metrics_radar(metrics))
 
-        # Footnote / catatan (expander)
-        with st.expander("Penjelasan Metrik Evaluasi"):
-            st.markdown("""
-            **Silhouette Score**  
-            Mengukur seberapa mirip suatu titik dengan klasternya sendiri dibandingkan dengan klaster lain.  
-            - Range: **-1 sampai 1**. Semakin tinggi (mendekati 1) semakin baik.
+            with st.expander("Penjelasan Metrik Evaluasi"):
+                st.markdown("""
+                **Silhouette Score**  
+                Mengukur seberapa mirip suatu titik dengan klasternya sendiri dibandingkan dengan klaster lain.  
+                - Range: **-1 sampai 1**. Semakin tinggi (mendekati 1) semakin baik.
 
-            **Davies-Bouldin Index (DBI)**  
-            Mengukur seberapa mirip antar klaster (rasio intra-cluster / inter-cluster).  
-            - Nilai lebih kecil lebih baik.
+                **Davies-Bouldin Index (DBI)**  
+                Mengukur seberapa mirip antar klaster (rasio intra-cluster / inter-cluster).  
+                - Nilai lebih kecil lebih baik.
 
-            **Calinski-Harabasz Index (CHI)**  
-            Mengukur rasio variasi antar-klaster terhadap variasi intra-klaster.  
-            - Nilai lebih besar lebih baik.
-            """)
+                **Calinski-Harabasz Index (CHI)**  
+                Mengukur rasio variasi antar-klaster terhadap variasi intra-klaster.  
+                - Nilai lebih besar lebih baik.
+                """)
+        else:
+            st.warning("⚠️ Dataset ini belum di-cluster. Silakan lakukan clustering di Tab 2.")
     else:
-        st.warning("⚠️ Silakan selesaikan proses clustering terlebih dahulu.")
-
+        st.warning("⚠️ Silakan upload dan pra-proses dataset di tab Data Dashboard.")
 
 # --- Tab 4: Perbandingan Metode ---
 with tab4: 
@@ -190,14 +193,12 @@ with tab4:
     st.caption("Bandingkan performa clustering antar dataset menggunakan metrik evaluasi yang sama.") 
     if "datasets" in st.session_state: 
         dataset_names = list(st.session_state["datasets"].keys()) 
-        # Dataset selector 
         selected_datasets = st.multiselect("Pilih dataset untuk dibandingkan", dataset_names, default=dataset_names) 
         if st.button("Bandingkan Dataset"): 
             results = [] 
             for name in selected_datasets: 
                 clean_df = st.session_state["datasets"][name] 
                 X = clean_df.select_dtypes(include="number").values 
-                # Default clustering pakai KMeans 
                 from methods.centroids import KMeansClustering 
                 model = KMeansClustering(n_clusters=3) 
                 model.fit(X) 
@@ -212,24 +213,22 @@ with tab4:
                         "Dataset": name, "Silhouette": silhouette,
                         "Davies-Bouldin": davies, "Calinski-Harabasz": calinski 
                         }) 
-                df_results = pd.DataFrame(results).set_index("Dataset") 
-                st.write("### 📊 Hasil Perbandingan Metrik Antar Dataset") 
-                st.dataframe(df_results.style.format("{:.4f}")) 
-                # Best dataset summary 
-                best_sil = df_results["Silhouette"].idxmax() 
-                best_dav = df_results["Davies-Bouldin"].idxmin() 
-                best_cal = df_results["Calinski-Harabasz"].idxmax() 
-                st.markdown("### Ringkasan:") 
-                st.write(f"• Silhouette terbaik: **{best_sil}**") 
-                st.write(f"• Davies-Bouldin terbaik (terkecil): **{best_dav}**") 
-                st.write(f"• Calinski-Harabasz terbaik: **{best_cal}**") 
-                
-                with st.expander("📘 Catatan Metrik"): 
-                    st.markdown(""" 
+            df_results = pd.DataFrame(results).set_index("Dataset") 
+            st.write("### 📊 Hasil Perbandingan Metrik Antar Dataset") 
+            st.dataframe(df_results.style.format("{:.4f}")) 
+            best_sil = df_results["Silhouette"].idxmax() 
+            best_dav = df_results["Davies-Bouldin"].idxmin() 
+            best_cal = df_results["Calinski-Harabasz"].idxmax() 
+            st.markdown("### Ringkasan:") 
+            st.write(f"• Silhouette terbaik: **{best_sil}**") 
+            st.write(f"• Davies-Bouldin terbaik (terkecil): **{best_dav}**") 
+            st.write(f"• Calinski-Harabasz terbaik: **{best_cal}**") 
+            
+            with st.expander("📘 Catatan Metrik"): 
+                st.markdown(""" 
                 **Silhouette Score:** semakin tinggi semakin baik (maksimum = 1). 
                 **Davies-Bouldin Index:** semakin rendah semakin baik (minimum = 0). 
                 **Calinski-Harabasz Index:** semakin tinggi semakin baik. 
-                                """) 
-                    
+                """) 
     else:
         st.warning("⚠️ Silakan unggah dan pra-proses dataset terlebih dahulu di tab Data Dashboard.")
