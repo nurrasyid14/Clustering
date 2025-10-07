@@ -25,10 +25,6 @@ tab1, tab2, tab3, tab4 = st.tabs(["Data Dashboard", "Clustering", "Evaluation", 
 
 # --- Tab 1: Data Dashboard ---
 with tab1:
-    st.subheader("Metode Berbasis Centroid")
-    st.caption("Metode ini membagi data ke dalam beberapa kelompok dengan mencari pusat (centroid) "
-               "yang meminimalkan jarak total antara titik data dan centroid-nya.")
-
     st.subheader("Upload Dataset")
     uploaded_file = st.file_uploader("Upload your CSV or Excel file", type=["csv", "xlsx"])
 
@@ -74,9 +70,6 @@ with tab1:
 
 # --- Tab 2: Clustering ---
 with tab2:
-    st.subheader("Metode Berbasis Kepadatan")
-    st.caption("Metode pengelompokan titik-titik data yang berdekatan dalam area yang padat, "
-               "sementara titik yang jauh dianggap sebagai noise. Cocok untuk data dengan bentuk tidak beraturan.")
     
     if "clean_df" in st.session_state:
         st.subheader("Clustering Pipeline")
@@ -89,6 +82,9 @@ with tab2:
 
         # Centroid
         if basis == "Centroid-based":
+            st.subheader("Metode Berbasis Centroid")
+            st.caption("Metode ini membagi data ke dalam beberapa kelompok dengan mencari pusat (centroid) "
+               "yang meminimalkan jarak total antara titik data dan centroid-nya.")
             method = st.selectbox("Choose method:", ["KMeans", "Fuzzy C-Means", "KModes"])
             n_clusters = st.slider("Number of clusters", 2, 10, 3)
 
@@ -111,6 +107,10 @@ with tab2:
 
         # Density
         elif basis == "Density-based":
+            st.subheader("Metode Berbasis Kepadatan")
+            st.caption("Metode pengelompokan titik-titik data yang berdekatan dalam area yang padat, "
+               "sementara titik yang jauh dianggap sebagai noise. Cocok untuk data dengan bentuk tidak beraturan.")
+    
             method = st.selectbox("Choose method:", ["DBSCAN", "KDE"])
             if method == "DBSCAN":
                 eps = st.slider("Epsilon (eps)", 0.1, 5.0, 0.5)
@@ -131,6 +131,9 @@ with tab2:
 
         # Hierarchical
         elif basis == "Hierarchical":
+            st.subheader("Metode Hierarkis")
+            st.caption("Metode ini membentuk hierarki klaster secara bertahap: agglomerative (dari bawah ke atas) "
+               "atau divisive (dari atas ke bawah). Hasilnya dapat divisualisasikan dengan dendrogram.")
             method = st.selectbox("Choose method:", ["Agglomerative", "Divisive"])
             n_clusters = st.slider("Number of clusters", 2, 10, 3)
             if method == "Agglomerative":
@@ -165,10 +168,6 @@ with tab2:
 
 # --- Tab 3: Evaluation ---
 with tab3:
-    st.subheader("Metode Hierarkis")
-    st.caption("Metode ini membentuk hierarki klaster secara bertahap: agglomerative (dari bawah ke atas) "
-               "atau divisive (dari atas ke bawah). Hasilnya dapat divisualisasikan dengan dendrogram.")
-    
     if "clean_df" in st.session_state and "labels" in st.session_state and st.session_state["labels"] is not None:
         st.subheader("Evaluation Metrics")
         clean_df = st.session_state["clean_df"]
