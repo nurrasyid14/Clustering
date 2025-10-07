@@ -194,7 +194,7 @@ with tab3:
 # --- Tab 4: Perbandingan Metode ---
 with tab4:
     st.subheader("Perbandingan Metode Clustering")
-    st.caption("Perbandingan metrik antar metode (tanpa dependensi AI eksternal).")
+    st.caption("Perbandingan metrik antar metode.")
 
     if "clean_df" in st.session_state:
         clean_df = st.session_state["clean_df"]
