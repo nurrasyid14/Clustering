@@ -38,15 +38,20 @@ with tab1:
         if "datasets" not in st.session_state:
             st.session_state["datasets"] = {}
         for uploaded_file in uploaded_files:
-            df = pd.read_csv(uploaded_file) if uploaded_file.name.endswith(".csv") else pd.read_excel(uploaded_file) 
+            df = pd.read_csv(uploaded_file) if uploaded_file.name.endswith(".csv") else pd.read_excel(uploaded_file)
+        
             st.success(f"✅ Loaded {uploaded_file.name} ({df.shape[0]} baris, {df.shape[1]} kolom)")
-            # Preprocessing 
-            etl = ETL(scaling="standard") 
-            clean_df = etl.transform(df, missing="mean") 
-            st.session_state["datasets"][uploaded_file.name] = clean_df 
-            # EDA summary 
-            eda = EDA(df) 
-            summary = eda.summary() 
+        
+            # Preprocessing
+            etl = ETL(scaling="standard")
+            clean_df = etl.transform(df, missing= 0)
+        
+            st.session_state["datasets"][uploaded_file.name] = clean_df
+        
+            # EDA summary should use clean_df
+            eda = EDA(clean_df)
+            summary = eda.summary()
+
             st.markdown(f"### Dataset: `{uploaded_file.name}`") 
             st.write("**Shape:**", summary["shape"]) 
             st.write("**Missing Values:**", summary["missing"]) 
