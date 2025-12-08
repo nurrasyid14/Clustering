@@ -9,6 +9,17 @@ class ETL:
         self.scaler = None
         self.encoders = {}
 
+    def clean_numeric(df):
+        # Replace comma decimals → dot decimals
+        df = df.replace(",", ".", regex=True)
+        
+        # Convert anything that can be numeric
+        for col in df.columns:
+            df[col] = pd.to_numeric(df[col], errors="ignore")
+    
+        return df
+
+
     def clean_missing(self, df: pd.DataFrame, strategy="drop", fill_value=None):
         if strategy == "drop":
             return df.dropna()
