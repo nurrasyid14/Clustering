@@ -44,7 +44,7 @@ with tab1:
         
             # Preprocessing
             etl = ETL(scaling="standard")
-            clean_df = etl.transform(df, missing= 0)
+            clean_df = etl.transform(df, missing= "0")
         
             st.session_state["datasets"][uploaded_file.name] = clean_df
         
